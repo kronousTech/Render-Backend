@@ -47,8 +47,9 @@ app.get('/counter', async (req, res) => {
       },
     });
 
-    res.json({ success: true, value: newValue });
-  } catch (error) {
+    res.send(newValue.toString());
+  } catch (error) 
+  {
     console.error(error);
     res.status(500).json({ success: false, message: 'An error occurred' });
   }
