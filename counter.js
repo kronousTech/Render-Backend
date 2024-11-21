@@ -8,9 +8,9 @@ app.use(express.json());
 
 
 // Load service account credentials
-console.log(`key json: ${process.env.GOOGLE_SERVICE_ACCOUNT_KEY}`);
-const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
 
+const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+console.log(`key json: ${credentials}`);
 // Authenticate with Google Sheets
 const auth = new google.auth.GoogleAuth({
   credentials,
@@ -21,7 +21,7 @@ const sheets = google.sheets({ version: 'v4', auth });
 
 // Google Sheets configuration
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
-
+console.log(`spreadsheet ID: ${SPREADSHEET_ID}`);
 const RANGE = 'Sheet1!B1'; // Adjust to your target cell
 
 // API endpoint to increment and return value
