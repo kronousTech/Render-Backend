@@ -3,8 +3,12 @@ const { google } = require('googleapis');
 const fs = require('fs');
 require('dotenv').config();
 
+
+const cors = require('cors');
+
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 
 // Load service account credentials
