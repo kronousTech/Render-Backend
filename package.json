@@ -1,3 +1,5 @@
-"scripts": {
-  "start": "counter.js"
+{
+  "scripts": {
+  "start": "node index.js"
+  }
 }
