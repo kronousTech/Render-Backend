@@ -1,68 +1,59 @@
-// ----- Google sheets
-const { google } = require('googleapis');
-const sheets = google.sheets('v4');
-const fs = require('fs');
-const path = require('path');
-
-// Load service account key file
-
-const KEYFILEPATH = path.join(__dirname, 'service-account-key.json');
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-
-const auth = new google.auth.GoogleAuth({
-    keyFile: KEYFILEPATH,
-    scopes: SCOPES,
-});
-
-const SPREADSHEET_ID = 'https://docs.google.com/spreadsheets/d/1Acx3JX-oR8zTptu9d_kr6j3sNBAS3sAkepJDxAGHD9w/edit?gid=0#gid=0'; // Copy this from the URL of the sheet
-const RANGE = 'Sheet1!B1'; // Adjust for where your counter is stored
-
-async function incrementCounter() {
-    const authClient = await auth.getClient();
-
-    // Get the current value
-    const getResponse = await sheets.spreadsheets.values.get({
-        auth: authClient,
-        spreadsheetId: SPREADSHEET_ID,
-        range: RANGE,
-    });
-
-    let counter = parseInt(getResponse.data.values[0][0] || '0', 10);
-
-    // Increment the counter
-    counter++;
-
-    // Update the value in the sheet
-    await sheets.spreadsheets.values.update({
-        auth: authClient,
-        spreadsheetId: SPREADSHEET_ID,
-        range: RANGE,
-        valueInputOption: 'RAW',
-        requestBody: {
-            values: [[counter]],
-        },
-    });
-
-    console.log(`Updated counter: ${counter}`);
-    return counter;
-}
-
-incrementCounter().catch(console.error);
-
-// -----
-
 const express = require('express');
-const app = express();
+const { google } = require('googleapis');
+const fs = require('fs');
+require('dotenv').config();
 
-app.get('/counter', async (req, res) => {
-    try {
-        const counter = await incrementCounter();
-        res.send(counter.toString());
-    } catch (error) {
-        res.status(500).send('Error updating counter');
-    }
+const app = express();
+app.use(express.json());
+
+// Load service account credentials
+const credentials = JSON.parse(fs.readFileSync('./path-to-your-service-account.json'));
+
+// Authenticate with Google Sheets
+const auth = new google.auth.GoogleAuth({
+  credentials,
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
-app.listen(3000, () => {
-    console.log('Server running on port 3000');
+const sheets = google.sheets({ version: 'v4', auth });
+
+// Google Sheets configuration
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
+const RANGE = 'Sheet1!B1'; // Adjust to your target cell
+
+// API endpoint to increment and return value
+app.get('/increment', async (req, res) => {
+  try {
+    // Read current value
+    const getResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: RANGE,
+    });
+
+    const currentValue = parseInt(getResponse.data.values?.[0]?.[0] || '0', 10);
+
+    // Increment value
+    const newValue = currentValue + 1;
+
+    // Update the cell with the new value
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: RANGE,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[newValue]],
+      },
+    });
+
+    res.json({ success: true, value: newValue });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
