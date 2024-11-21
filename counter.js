@@ -46,7 +46,7 @@ app.get('/counter', (req, res) => {
 });
 
 // Endpoint to increment the counter
-app.post('/increment', (req, res) => 
+app.post('/counter', (req, res) => 
 {
     counter++;
 
