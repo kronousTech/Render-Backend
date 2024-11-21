@@ -6,6 +6,7 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
+
 // Load service account credentials
 const credentials = JSON.parse(fs.readFileSync('./path-to-your-service-account.json'));
 
@@ -19,10 +20,11 @@ const sheets = google.sheets({ version: 'v4', auth });
 
 // Google Sheets configuration
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
+
 const RANGE = 'Sheet1!B1'; // Adjust to your target cell
 
 // API endpoint to increment and return value
-app.get('/increment', async (req, res) => {
+app.get('/counter', async (req, res) => {
   try {
     // Read current value
     const getResponse = await sheets.spreadsheets.values.get({
