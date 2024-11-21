@@ -6,7 +6,7 @@ const path = require('path');
 
 // Load service account key file
 
-const KEYFILEPATH = path.join(__dirname, 'portfolio-visitor-count-439e47ae1fe3.json');
+const KEYFILEPATH = path.join(__dirname, 'service-account-key.json');
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
 const auth = new google.auth.GoogleAuth({
