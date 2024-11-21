@@ -1,59 +1,68 @@
-const express = require('express');
-const fs = require ('fs');
-const app = express();
+// ----- Google sheets
+const { google } = require('googleapis');
+const sheets = google.sheets('v4');
+const fs = require('fs');
+const path = require('path');
 
-const PORT = 3000;
-const COUNTER_FILE = 'portfolio_visitors_count.txt';
+// Load service account key file
 
-// Initialize counter
-let counter = readCounter();
+const KEYFILEPATH = path.join(__dirname, 'service-account-key.json');
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
-// Function to read the counter from the file
-function readCounter() 
-{
-    try 
-    {
-      if (fs.existsSync(COUNTER_FILE)) 
-      {
-        const data = fs.readFileSync(COUNTER_FILE, 'utf-8');
-
-        return parseInt(data, 10) || 0;
-      } 
-      else 
-      {
-        return 0;
-      }
-    } 
-    catch (err) 
-    {
-      console.error('Error reading the counter file:', err);
-      return 0;
-    }
-}
-
-// Function to save the counter to the file
-function saveCounter(value) {
-    try {
-      fs.writeFileSync(COUNTER_FILE, value.toString(), 'utf-8');
-    } catch (err) {
-      console.error('Error writing to the counter file:', err);
-    }
-}
-
-// Endpoint to get the current count
-app.get('/counter', (req, res) => {
-    res.send(counter.toString());
+const auth = new google.auth.GoogleAuth({
+    keyFile: KEYFILEPATH,
+    scopes: SCOPES,
 });
 
-// Endpoint to increment the counter
-app.post('/counter', (req, res) => 
-{
+const SPREADSHEET_ID = 'https://docs.google.com/spreadsheets/d/1Acx3JX-oR8zTptu9d_kr6j3sNBAS3sAkepJDxAGHD9w/edit?gid=0#gid=0'; // Copy this from the URL of the sheet
+const RANGE = 'Sheet1!B1'; // Adjust for where your counter is stored
+
+async function incrementCounter() {
+    const authClient = await auth.getClient();
+
+    // Get the current value
+    const getResponse = await sheets.spreadsheets.values.get({
+        auth: authClient,
+        spreadsheetId: SPREADSHEET_ID,
+        range: RANGE,
+    });
+
+    let counter = parseInt(getResponse.data.values[0][0] || '0', 10);
+
+    // Increment the counter
     counter++;
 
-    saveCounter(counter);
-    
-    res.send(counter.toString());
+    // Update the value in the sheet
+    await sheets.spreadsheets.values.update({
+        auth: authClient,
+        spreadsheetId: SPREADSHEET_ID,
+        range: RANGE,
+        valueInputOption: 'RAW',
+        requestBody: {
+            values: [[counter]],
+        },
+    });
+
+    console.log(`Updated counter: ${counter}`);
+    return counter;
+}
+
+incrementCounter().catch(console.error);
+
+// -----
+
+const express = require('express');
+const app = express();
+
+app.get('/counter', async (req, res) => {
+    try {
+        const counter = await incrementCounter();
+        res.send(counter.toString());
+    } catch (error) {
+        res.status(500).send('Error updating counter');
+    }
 });
 
-
-app.listen(PORT, () => console.log('Visitor counter running on port 3000'));
+app.listen(3000, () => {
+    console.log('Server running on port 3000');
+});
