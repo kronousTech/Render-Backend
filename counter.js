@@ -8,7 +8,7 @@ app.use(express.json());
 
 
 // Load service account credentials
-const credentials = JSON.parse(fs.readFileSync('./path-to-your-service-account.json'));
+const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
 
 // Authenticate with Google Sheets
 const auth = new google.auth.GoogleAuth({
