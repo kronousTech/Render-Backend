@@ -1,5 +1,8 @@
 {
   "scripts": {
-  "start": "node counter.js"
+    "start": "node counter.js"
+  },
+  "dependencies": {
+    "express": "^4.21.1"
   }
 }
